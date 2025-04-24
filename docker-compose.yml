@@ -1,0 +1,41 @@
+services:
+  wordpress:
+    image: wordpress:php7.4-apache
+    container_name: wordpress_app
+    ports:
+      - "${WP_PORT:-8080}:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+    volumes:
+      - ./wordpress:/var/www/html
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0.41
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+  wpcli:
+    image: wordpress:cli
+    container_name: wpcli_tool
+    depends_on:
+      - db
+      - wordpress
+    working_dir: /var/www/html
+    volumes:
+      - ./wordpress:/var/www/html
+    entrypoint: ["wp"]
+    command: ["--info"]
+
+volumes:
+  db_data:
